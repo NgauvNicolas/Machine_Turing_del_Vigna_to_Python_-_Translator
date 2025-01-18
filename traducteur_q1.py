@@ -11,7 +11,8 @@ On peut ensuite tester le Script Python qui a été créé à partir de la tradu
     On note qu'il n'y a ici pas besoin d'arguments pour l'exécution du script généré, puisque les arguments qu'on veut utiliser on été prise en compte lors de la création de ce script à la commande précédente.
         
 De manière générale, adapter le nombre d'arguments lors de la génération du script python en fonction de la tâche à effectuer ensuite
-    (si c'est une multiplication, une addition ou une division par exemple, alors il faut 2 arguments de valeurs à manipuler, mais dans d'autres tâches ce n'est pas forcément nécessaire).
+    (si c'est une multiplication, une addition ou une division par exemple, alors il faut 2 arguments de valeurs à manipuler, 
+    mais dans d'autres tâches ce n'est pas forcément nécessaire, par exemple avec ajout3batons.1.TS on peut utiliser 1 seul argument et avec 01.1.TS aucun argument).
 """
 
 
@@ -110,17 +111,17 @@ class MTdV_Traducteur_q1 :
             # Initialise le ruban avec des 1 sur une plage de taille x
             m = sys.argv[2]
             self.ajouter_ligne("# Initialisation de la première plage de 1")
-            self.ajouter_ligne("for i in range({}+1):".format(m))
+            self.ajouter_ligne("for i in range({}+1) :".format(m))
             self.ajouter_ligne("  ruban[X+i] = 1")
         elif len(sys.argv) == 4 :
             # Initialise deux plages successives de 1 sur le ruban, respectivement de taille m et n et séparées par 2 cases
             m = sys.argv[2]
             n = sys.argv[3]
             self.ajouter_ligne("# Initialisation de la première plage de 1")
-            self.ajouter_ligne("for i in range({}+1):".format(m))
+            self.ajouter_ligne("for i in range({}+1) :".format(m))
             self.ajouter_ligne("    ruban[X+i] = 1")
             self.ajouter_ligne("# Initialisation de la seconde plage de 1 (séparée par 2 cases)")
-            self.ajouter_ligne("for i in range({}+1):".format(n))
+            self.ajouter_ligne("for i in range({}+1) :".format(n))
             self.ajouter_ligne("    ruban[X+{}+3+i] = 1".format(m))
 
     def traduire_lignes(self, lignes) :
