@@ -1,115 +1,266 @@
-import json
+"""
+Question I.
+Instruction for : utilisation de la récursivité pour les conditions et boucles.
+Instruction return prohibée : utilisation de if et else.
+
+
+Exemple d'appel en ligne de commande sur le terminal : python traducteur_q1.py ts_scripts/multiplicateur.1.TS 3 5
+    Et on obtient le Script Python généré : py_scripts/multiplicateur.1_Q1translated.py
+On peut ensuite tester le Script Python qui a été créé à partir de la traduction du Script TS :
+    Exemple d'appel en ligne de commande sur le terminal : python py_scripts/multiplicateur.1_Q1translated.py
+    On note qu'il n'y a ici pas besoin d'arguments pour l'exécution du script généré, puisque les arguments qu'on veut utiliser on été prise en compte lors de la création de ce script à la commande précédente.
+        
+De manière générale, adapter le nombre d'arguments lors de la génération du script python en fonction de la tâche à effectuer ensuite
+    (si c'est une multiplication, une addition ou une division par exemple, alors il faut 2 arguments de valeurs à manipuler, mais dans d'autres tâches ce n'est pas forcément nécessaire).
+"""
+
+
+
 import sys
 
-# Initialisation des variables globales
-ruban = []  # Le ruban, représenté comme une liste
-io_head_index = 0  # Position de la tête de lecture-écriture
 
-# Dictionnaire des fonctions correspondant aux instructions MdTV
-def start():
-    # Rien à faire pour l'instruction "start"
-    pass
+# Classe principale assurant la traduction d'un script MTdV vers un sous-ensemble Python comme stipulé dans l'énoncé
+class MTdV_Traducteur_q1 :
+    def __init__(self) :
+        """
+        Initialise les variables dont on a besoin pour la traduction.
+        """
+        # Indentation courante
+        self.indentation_courante = 0
+        
+        # Compteur pour compter les boucles afin de les nommer et les différencier selon les étapes
+        self.boucle_valeur_max = 0
+        # Compteur pour la position courante des boucles
+        self.boucle_position_courante = 0
+        # Stocke les noms des boucles, leur position et leur indentation
+        self.boucle_nom_pos_ind = []
 
-def move_right():
-    global io_head_index
-    io_head_index += 1
-    if io_head_index >= len(ruban):
-        ruban.append('0')  # Étend le ruban si nécessaire
+        # Compteurs pour les conditions
+        self.if_compteur = 0
+        self.else_compteur = 0
 
-def move_left():
-    global io_head_index
-    if io_head_index > 0:
-        io_head_index -= 1
-    else:
-        raise IndexError("La tête ne peut pas dépasser le bord gauche du ruban.")
+        # Stockage du code généré
+        self.code = []
 
-def write_0():
-    global ruban, io_head_index
-    ruban[io_head_index] = '0'
+    def indentation(self) :
+        """
+        Gère l'indentation selon self.indentation_courante afin de respecter le niveau d'imbrication.
+        """
+        return "    " * self.indentation_courante
 
-def write_1():
-    global ruban, io_head_index
-    ruban[io_head_index] = '1'
+    def ajouter_ligne(self, ligne) :
+        """
+        Ajoute une ligne de code correctement indentée.
+        """
+        self.code.append(self.indentation() + ligne)
 
-def if_read_0(next_nodes):
-    global ruban, io_head_index
-    return next_nodes[0] if ruban[io_head_index] == '0' else next_nodes[1]
+    def generer_entete(self) :
+        """
+        Génère l'en-tête du programme Python avec :
+        - L'initialisation du ruban (liste de 1200 cases)
+        - La position initiale de la tête (au milieu du ruban)
+        - Les instructions basiques de la Machine de Turing del Vigna :
+            * E0() : écriture d'un 0
+            * E1() : écriture d'un 1
+            * D() : déplacement à droite
+            * G() : déplacement à gauche
+        """
+        entete = [
+            "import sys",
+            "",
+            "# Initialisation du ruban avec 1200 cases à 0",
+            "ruban = [0] * 1200",
+            "X = len(ruban) // 2",
+            "",
+            "def E0() :",
+            "    ruban[X] = 0  # Écriture d'un 0 à la position courante",
+            "",
+            "def E1() :",
+            "    ruban[X] = 1  # Écriture d'un 1 à la position courante",
+            "",
+            "def D() :",
+            "    global X",
+            "    X += 1 # Déplacement de la tête vers la droite",
+            "",
+            "def G() :",
+            "    global X",
+            "    X -= 1 # Déplacement de la tête vers la gauche",
+            "",
+        ]
+        self.code.extend(entete)
 
-def if_read_1(next_nodes):
-    global ruban, io_head_index
-    return next_nodes[0] if ruban[io_head_index] == '1' else next_nodes[1]
+    def generer_corps(self, nom_fichier) :
+        """
+        Gère l'initialisation du ruban selon les arguments qu'on veut que le script généré tienne compte (arguments qui dépendent quant à eux, de la tâche à effecuter choisie) :
+        - Aucun argument : définit juste le nombre d'étapes par défaut (le ruban initialisé n'est donc composé que de 0 (1200))
+        - Un argument ARG2 : initialise une plage d'une valeur de ARG2+1 cases à 1
+        - Deux arguments ARG2 et ARG3 : initialise deux plages séparées par 2 cases, de ARG3+1 et ARG2+1 cases à 1
+        """
 
-def print_machine_state():
-    global ruban, io_head_index
-    print("Ruban:", ''.join(ruban))
-    print("Position:", ' ' * io_head_index + 'X')
+        # argv[0] -> ARG0 : traducteur_q1.py
+        # argv[1] -> ARG1 : ts_scripts/nom_du_script_TS_a_tester.TS
+        # argv[2] -> ARG2 : un chiffre ou nombre s'il existe (c'est-à-dire s'il est fourni)
+        # argv[3] -> ARG3 : un chiffre ou nombre s'il existe (c'est-à-dire s'il est fourni)
+        # len(sys.argv) -> ARGC
 
-def loop(body_nodes):
-    while True:
-        for node_id in body_nodes:
-            if execute_node(node_id):
-                return
+        if len(sys.argv) == 2 :
+            # Définit le nombre d'étapes par défaut si aucun argument qu'on veut que le script généré tienne compte
+            self.ajouter_ligne("nb_etapes = 21")
+        elif len(sys.argv) == 3 :
+            # Initialise le ruban avec des 1 sur une plage de taille x
+            m = sys.argv[2]
+            self.ajouter_ligne("# Initialisation de la première plage de 1")
+            self.ajouter_ligne("for i in range({}+1):".format(m))
+            self.ajouter_ligne("  ruban[X+i] = 1")
+        elif len(sys.argv) == 4 :
+            # Initialise deux plages successives de 1 sur le ruban, respectivement de taille m et n et séparées par 2 cases
+            m = sys.argv[2]
+            n = sys.argv[3]
+            self.ajouter_ligne("# Initialisation de la première plage de 1")
+            self.ajouter_ligne("for i in range({}+1):".format(m))
+            self.ajouter_ligne("    ruban[X+i] = 1")
+            self.ajouter_ligne("# Initialisation de la seconde plage de 1 (séparée par 2 cases)")
+            self.ajouter_ligne("for i in range({}+1):".format(n))
+            self.ajouter_ligne("    ruban[X+{}+3+i] = 1".format(m))
 
-def end():
-    # Rien à faire pour "end"
-    pass
+    def traduire_lignes(self, lignes) :
+        """
+        Traduit chaque ligne de code MTdV en instructions Python.
+        Gère les commandes de base (G,D,0,1), l'affichage (I),les pauses (P), et les structures de contrôle (boucle, si).
+        """
+        for ligne in lignes :
+            # On ne prend pas en compte les commentaires inline
+            index = ligne.find("%")
+            ligne = ligne[:index].strip() if index != -1 else ligne.strip()
+            
+            # Ajout d'espaces avant parenthèses et accolades ouvrantes et fermantes
+            ligne = ligne.replace("(", " (")            
+            ligne = ligne.replace("}", " }")
 
-# Map des instructions aux fonctions correspondantes
-instruction_map = {
-    "start": start,
-    "move right": move_right,
-    "move left": move_left,
-    "write 0": write_0,
-    "write 1": write_1,
-    "if read 0": if_read_0,
-    "if read 1": if_read_1,
-    "print machine state": print_machine_state,
-    "loop": loop,
-    "end": end
-}
+            # Découpage de la ligne en tokens
+            tokens = ligne.split()
+            i = 0
+            while i < len(tokens) :
+                if tokens[i] == "D" :
+                    # Se déplace à droite
+                    self.ajouter_ligne("D()")
+                    
+                elif tokens[i] == "G" :
+                    # Se déplace à gauche
+                    self.ajouter_ligne("G()")
 
-# Fonction pour exécuter un nœud
-nodes = []  # Les nœuds du programme chargé
+                elif tokens[i] == "1" :
+                    # Écrit 1 sur le ruban
+                    self.ajouter_ligne("E1()")
 
-def execute_node(node_id):
-    global nodes
-    node = nodes[node_id]
+                elif tokens[i] == "0" :
+                    # Écrit 0 sur le ruban 
+                    # (la MTdV ne peut que mettre des batons ou en enlever : écrire 0 revient à enlever le baton)
+                    self.ajouter_ligne("E0()")
+                    
+                elif tokens[i] == "P":
+                    # Met le programme en pause selon la valeur de nb_etapes
+                    self.ajouter_ligne("global nb_etapes")
+                    self.ajouter_ligne("if nb_etapes > 0 : ")
+                    self.ajouter_ligne("     input('Appuyez sur la touche Entrée pour continuer')")
+                    self.ajouter_ligne("     nb_etapes -= 1")
+                    self.ajouter_ligne("     boucle0()")
+                    self.ajouter_ligne("else :")
+                    self.ajouter_ligne("     sys.exit()")
 
-    instruction = node["inst"]
-    edges = node.get("edges", [])
-    body = node.get("body", [])
+                elif tokens[i] == "I" :
+                    # Commande d'affichage du ruban
+                    # Affiche une fenêtre de 100 cases autour de la position courante
+                    # (la position courante étant au centre de la fenêtre)
+                    self.ajouter_ligne("")
+                    self.ajouter_ligne("# Extraction de la fenêtre visible du ruban")
+                    self.ajouter_ligne("ruban_visible = ''.join(map(str,ruban[600-50:600+50]))")
+                    self.ajouter_ligne("print(ruban_visible)  # Affichage du contenu")
+                    self.ajouter_ligne("# Création de la ligne de marqueur de position")
+                    self.ajouter_ligne("ligne_marqueur_pos = [' '] * 200")
+                    self.ajouter_ligne("ligne_marqueur_pos[X-600+50] = 'X'  # Position de la tête")
+                    self.ajouter_ligne("ligne_marqueur_pos = ''.join(ligne_marqueur_pos)")
+                    self.ajouter_ligne("print(ligne_marqueur_pos)  # Affichage de la position")
+                    self.ajouter_ligne("")
 
-    if instruction in ["if read 0", "if read 1"]:
-        return instruction_map[instruction]([edge[0] for edge in edges])
-    elif instruction == "loop":
-        instruction_map[instruction]([edge[0] for edge in edges if edge[1] == "start loop"])
-    else:
-        instruction_map[instruction]()
+                elif tokens[i] == "boucle" :
+                    # Début d'un bloc de boucle
+                    self.boucle_nom_pos_ind.append((self.boucle_valeur_max, self.indentation_courante))
+                    self.ajouter_ligne("def boucle{}() :".format(self.boucle_nom_pos_ind[-1][0]))
+                    self.indentation_courante += 1
+                    self.boucle_valeur_max += 1
+                    self.boucle_position_courante += 1
 
-    # Suivant logique par défaut
-    return edges[0][0] if edges else None
+                elif tokens[i] == "si" :
+                    # Début d'une condition
+                    self.if_compteur += 1
+                    i += 1
+                    if tokens[i] == "(0)":
+                        self.ajouter_ligne("if ruban[X] == 0 :")  # Test si la position courante contient un 0
+                        self.indentation_courante += 1  
+                    elif tokens[i] == "(1)" :
+                        self.ajouter_ligne("if ruban[X] == 1 :")  # Test si la position courante contient un 1
+                        self.indentation_courante += 1
 
-# Chargement et exécution du programme MdTV
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python traducteur.py <fichier_json>")
-        sys.exit(1)
+                elif tokens[i] == "fin" :
+                    # Fin de la boucle
+                    if self.boucle_position_courante > 0:
+                        self.ajouter_ligne("0")
+                        self.indentation_courante -= 1
+                        self.else_compteur += 1
+                        self.ajouter_ligne("else :")
+                        self.indentation_courante += 1
 
-    fichier_json = sys.argv[1]
+                elif tokens[i] == "}":
+                    # Clôture d'un bloc condition ou boucle
+                    if self.if_compteur > 0:
+                        self.if_compteur -= 1
+                        if self.boucle_position_courante == 0:
+                            self.ajouter_ligne("sys.exit()")
+                            self.indentation_courante -= 1
 
-    try:
-        with open(fichier_json, 'r') as f:
-            programme = json.load(f)
-    except Exception as e:
-        print("Erreur lors du chargement du fichier JSON:", e)
-        sys.exit(1)
+                    elif self.boucle_position_courante > 0:
+                        # Appel récursif de la boucle
+                        self.ajouter_ligne("boucle{}()".format(self.boucle_nom_pos_ind[-1][0]))
+                        self.else_compteur -= 1
+                        self.indentation_courante -= 1
 
-    # Initialisation des nœuds et du ruban
-    nodes = programme["nodes"]
-    ruban = ['0'] * 100  # Initialisation avec un ruban par défaut de 100 cellules
-    io_head_index = 50   # Position initiale au centre du ruban
+                        self.indentation_courante = self.boucle_nom_pos_ind[-1][-1]
+                        self.ajouter_ligne("boucle{}()".format(self.boucle_nom_pos_ind[-1][0]))
+                        self.boucle_nom_pos_ind.pop()
+                        self.boucle_position_courante -= 1
+                        
+                i += 1
 
-    # Exécution du programme MdTV
-    current_node_id = 0
-    while current_node_id is not None:
-        current_node_id = execute_node(current_node_id)
+    def traduire_fichier(self, nom_fichier) :
+        """
+        Traduit le script TS en Python.
+        Lit le fichier, filtre toutes les lignes et crée le script Python.
+        """
+        with open(nom_fichier, "r", encoding="latin-1") as fichier :
+            contenu = fichier.read()
+        lignes = []
+        # Gestion des lignes vides et des commentaires
+        for ligne in contenu.split("\n") :
+            ligne = ligne.strip()
+            if not ligne or ligne.startswith("%") or ligne == "#" :
+                continue
+            lignes.append(ligne)
+        # Génère l'en-tête, le corps, et ensuite traduit le contenu
+        self.generer_entete()
+        self.generer_corps(nom_fichier)
+        self.traduire_lignes(lignes)
+        return "\n".join(self.code)
+
+if __name__ == "__main__" :
+    traducteur_q1 = MTdV_Traducteur_q1()
+    translated_code = traducteur_q1.traduire_fichier(sys.argv[1])
+
+    # Afficher le code traduit
+    #print(translated_code)
+
+    # Sauvegarder dans un fichier de sortie
+    output_fichier = sys.argv[1].replace("ts_scripts", "py_scripts") .replace(".TS", "_Q1translated.py")
+    with open(output_fichier, "w") as fichier :
+        fichier.write(translated_code)
+    print(f"Script Python généré : {output_fichier}")
