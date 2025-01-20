@@ -8,7 +8,8 @@ Exemple d'appel en ligne de commande sur le terminal : python traducteur_q1.py t
     Et on obtient le Script Python généré : py_scripts/multiplicateur.1_Q1translated.py
 On peut ensuite tester le Script Python qui a été créé à partir de la traduction du Script TS :
     Exemple d'appel en ligne de commande sur le terminal : python py_scripts/multiplicateur.1_Q1translated.py
-    On note qu'il n'y a ici pas besoin d'arguments pour l'exécution du script généré, puisque les arguments qu'on veut utiliser on été prise en compte lors de la création de ce script à la commande précédente.
+    On note qu'il n'y a ici pas besoin de fournir d'arguments pour l'exécution du script généré (mais on peut quand même les donner si on veut), 
+        puisque les arguments qu'on veut utiliser on été prise en compte lors de la création de ce script à la commande précédente.
         
 De manière générale, adapter le nombre d'arguments lors de la génération du script python en fonction de la tâche à effectuer ensuite
     (si c'est une multiplication, une addition ou une division par exemple, alors il faut 2 arguments de valeurs à manipuler, 
@@ -68,24 +69,25 @@ class MTdV_Traducteur_q1 :
         """
         entete = [
             "import sys",
-            "",
-            "# Initialisation du ruban avec 1200 cases à 0",
-            "ruban = [0] * 1200",
-            "X = len(ruban) // 2",
-            "",
+            "\n",
+            
             "def E0() :",
             "    ruban[X] = 0  # Écriture d'un 0 à la position courante",
-            "",
             "def E1() :",
             "    ruban[X] = 1  # Écriture d'un 1 à la position courante",
             "",
+            
             "def D() :",
             "    global X",
             "    X += 1 # Déplacement de la tête vers la droite",
-            "",
             "def G() :",
             "    global X",
             "    X -= 1 # Déplacement de la tête vers la gauche",
+            "\n",
+            
+            "# Initialisation du ruban avec 1200 cases à 0",
+            "ruban = [0] * 1200",
+            "X = len(ruban) // 2",
             "",
         ]
         self.code.extend(entete)
@@ -103,7 +105,7 @@ class MTdV_Traducteur_q1 :
         # argv[2] -> ARG2 : un chiffre ou nombre s'il existe (c'est-à-dire s'il est fourni)
         # argv[3] -> ARG3 : un chiffre ou nombre s'il existe (c'est-à-dire s'il est fourni)
         # len(sys.argv) -> ARGC
-
+        self.ajouter_ligne("")
         if len(sys.argv) == 2 :
             # Définit le nombre d'étapes par défaut si aucun argument qu'on veut que le script généré tienne compte
             self.ajouter_ligne("nb_etapes = 21")
@@ -129,11 +131,13 @@ class MTdV_Traducteur_q1 :
         Traduit chaque ligne de code MTdV en instructions Python.
         Gère les commandes de base (G,D,0,1), l'affichage (I),les pauses (P), et les structures de contrôle (boucle, si).
         """
+        self.ajouter_ligne("\n")
+        #self.ajouter_ligne("try :")
+        #self.indentation_courante = 1
         for ligne in lignes :
             # On ne prend pas en compte les commentaires inline
-            index = ligne.find("%")
-            ligne = ligne[:index].strip() if index != -1 else ligne.strip()
-            
+            indice = ligne.find("%")
+            ligne = ligne[:indice].strip() if indice != -1 else ligne.strip()
             # Ajout d'espaces avant parenthèses et accolades ouvrantes et fermantes
             ligne = ligne.replace("(", " (")            
             ligne = ligne.replace("}", " }")
@@ -159,7 +163,7 @@ class MTdV_Traducteur_q1 :
                     # (la MTdV ne peut que mettre des batons ou en enlever : écrire 0 revient à enlever le baton)
                     self.ajouter_ligne("E0()")
                     
-                elif tokens[i] == "P":
+                elif tokens[i] == "P" :
                     # Met le programme en pause selon la valeur de nb_etapes
                     self.ajouter_ligne("global nb_etapes")
                     self.ajouter_ligne("if nb_etapes > 0 : ")
@@ -168,12 +172,12 @@ class MTdV_Traducteur_q1 :
                     self.ajouter_ligne("     boucle0()")
                     self.ajouter_ligne("else :")
                     self.ajouter_ligne("     sys.exit()")
+                    self.ajouter_ligne("")
 
                 elif tokens[i] == "I" :
                     # Commande d'affichage du ruban
                     # Affiche une fenêtre de 100 cases autour de la position courante
                     # (la position courante étant au centre de la fenêtre)
-                    self.ajouter_ligne("")
                     self.ajouter_ligne("# Extraction de la fenêtre visible du ruban")
                     self.ajouter_ligne("ruban_visible = ''.join(map(str,ruban[600-50:600+50]))")
                     self.ajouter_ligne("print(ruban_visible)  # Affichage du contenu")
@@ -196,7 +200,7 @@ class MTdV_Traducteur_q1 :
                     # Début d'une condition
                     self.if_compteur += 1
                     i += 1
-                    if tokens[i] == "(0)":
+                    if tokens[i] == "(0)" :
                         self.ajouter_ligne("if ruban[X] == 0 :")  # Test si la position courante contient un 0
                         self.indentation_courante += 1  
                     elif tokens[i] == "(1)" :
@@ -205,7 +209,7 @@ class MTdV_Traducteur_q1 :
 
                 elif tokens[i] == "fin" :
                     # Fin de la boucle
-                    if self.boucle_position_courante > 0:
+                    if self.boucle_position_courante > 0 :
                         self.ajouter_ligne("0")
                         self.indentation_courante -= 1
                         self.else_compteur += 1
@@ -214,24 +218,33 @@ class MTdV_Traducteur_q1 :
 
                 elif tokens[i] == "}":
                     # Clôture d'un bloc condition ou boucle
-                    if self.if_compteur > 0:
+                    if self.if_compteur > 0 :
                         self.if_compteur -= 1
-                        if self.boucle_position_courante == 0:
+                        if self.boucle_position_courante == 0 :
                             self.ajouter_ligne("sys.exit()")
                             self.indentation_courante -= 1
 
-                    elif self.boucle_position_courante > 0:
+                    elif self.boucle_position_courante > 0 :
                         # Appel récursif de la boucle
                         self.ajouter_ligne("boucle{}()".format(self.boucle_nom_pos_ind[-1][0]))
                         self.else_compteur -= 1
                         self.indentation_courante -= 1
+                        self.ajouter_ligne("")
 
                         self.indentation_courante = self.boucle_nom_pos_ind[-1][-1]
                         self.ajouter_ligne("boucle{}()".format(self.boucle_nom_pos_ind[-1][0]))
                         self.boucle_nom_pos_ind.pop()
                         self.boucle_position_courante -= 1
+                        self.ajouter_ligne("")
                         
                 i += 1
+                
+        #self.indentation_courante = 0
+        #self.ajouter_ligne("")
+        #self.ajouter_ligne("except IndexError :")
+        #self.indentation_courante = 1
+        #self.ajouter_ligne("print('Longueur maximale du ruban atteint à la fin : le programme arrête')")
+        #self.ajouter_ligne("sys.exit(1)")
 
     def traduire_fichier(self, nom_fichier) :
         """

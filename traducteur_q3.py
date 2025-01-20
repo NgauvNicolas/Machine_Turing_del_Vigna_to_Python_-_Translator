@@ -70,44 +70,46 @@ class MTdV_Traducteur_q3 :
         entete = [
             "import sys",
             "sys.setrecursionlimit(3000)",
-            "def init_ruban(taille1, taille2=0):     # taille1 et taille2 représentent les tailles des deux séquences de 1",
+            "\n",
+            
+            "def init_ruban(taille1, taille2=0) :     # taille1 et taille2 représentent les tailles des deux séquences de 1",
             "   # retourne un préfixe de 600 zéros (zones vides au début de la bande), une séquence de taille1 1, un séparateur de deux 0, une deuxième séquence de taille2 1 (si elle est utilisée), remplit le reste du ruban jusqu'à une longueur totale de 1200 (la longueur du ruban)",
             "   return ([0] * 600) + ([1] * taille1) + ([0] * 2) + ([1] * taille2) + ([0] * (1200 - taille1 - taille2 - 2 - 600))",
-            "",
+            "\n",
+            
             "# X[-1] : position actuelle de la tête sur le ruban (dernier élément de la liste X)",
             "def E0(ruban, X) :     # Écriture d'un 0 à la position courante",
             "    ruban.pop(X[-1])",
             "    ruban.insert(X[-1], 0)",
-            "",
             "def E1(ruban, X) :     # Écriture d'un 1 à la position courante",
             "    ruban.pop(X[-1])",
             "    ruban.insert(X[-1], 1)",
             "",
+            
             "def D(X) :     # Déplacement de la tête vers la droite",
             "    X.append(X[-1]+1)",
             "    X.pop(0)",
-            "",
             "def G(X) :     # Déplacement de la tête vers la gauche",
             "    X.append(X[-1]-1)",
             "    X.pop(0)",
-            "",
+            "\n",
             
             "# Fonctions récursives pour les opérations sur listes",
-            "def new_len(liste) :  # Calcule la longueur d'une liste de manière récursive",
+            "def len_v2(liste) :  # Calcule la longueur d'une liste de manière récursive",
             "   # Si la liste est vide (if not liste), retourne 0",
-            "   # Sinon, retourne 1 (pour l'élément courant) + la longueur du reste de la liste (new_len(liste[1:]))",
+            "   # Sinon, retourne 1 (pour l'élément courant) + la longueur du reste de la liste (len_v2(liste[1:]))",
             "   if not liste :",
             "       return 0",
-            "   return 1 + new_len(liste[1:])",
+            "   return 1 + len_v2(liste[1:])",
             "",
-            "def new_join(liste, index=0, resultat=\"\"):   # Construit une chaîne de caractères représentant les éléments d'une liste, de manière récursive",
+            "def join_v2(liste, indice=0, resultat=\"\") :   # Construit une chaîne de caractères représentant les éléments d'une liste, de manière récursive",
             "   # liste : La liste à convertir en chaîne",
-            "   # index : Position actuelle dans la liste (initialement 0)",
+            "   # indice : Position actuelle dans la liste (initialement 0)",
             "   # resultat : Chaîne accumulée au cours de la récursion",
-            "   # Si l'index atteint la longueur de la liste (new_len(liste)), retourne la chaîne construite",
-            "   if index == new_len(liste) :",
+            "   # Si l'indice atteint la longueur de la liste (len_v2(liste)), retourne la chaîne construite",
+            "   if indice == len_v2(liste) :",
             "       return resultat",
-            "   return new_join(liste, index + 1, resultat + \"{}\".format(liste[index]))",
+            "   return join_v2(liste, indice + 1, resultat + \"{}\".format(liste[indice]))",
             "",
         ]
         self.code.extend(entete)
@@ -125,22 +127,22 @@ class MTdV_Traducteur_q3 :
         # argv[2] -> ARG2 : un chiffre ou nombre s'il existe (c'est-à-dire s'il est fourni)
         # argv[3] -> ARG3 : un chiffre ou nombre s'il existe (c'est-à-dire s'il est fourni)
         # len(sys.argv) -> ARGC
-
+        self.ajouter_ligne("")
         if len(sys.argv) == 2 :
             # Définit le nombre d'étapes par défaut si aucun argument qu'on veut que le script généré tienne compte
             self.ajouter_ligne("ruban = init_ruban(0)")
-            self.ajouter_ligne("X = [new_len(ruban) // 2]")
+            self.ajouter_ligne("X = [len_v2(ruban) // 2]")
         elif len(sys.argv) == 3 :
             # Initialise le ruban avec des 1 sur une plage de taille x
             m = sys.argv[2]
             self.ajouter_ligne("# Initialisation de la première plage de 1")
             self.ajouter_ligne("ruban = init_ruban(int(sys.argv[1])+1, 0)")
-            self.ajouter_ligne("X = [new_len(ruban) // 2]")
+            self.ajouter_ligne("X = [len_v2(ruban) // 2]")
         elif len(sys.argv) == 4 :
             # Initialise deux plages successives de 1 sur le ruban, respectivement de taille int(sys.argv[2])+1 et int(sys.argv[3])+1) ici, et séparées par 2 cases
             self.ajouter_ligne("# Initialisation de deux plages successives de 1 sur le ruban, respectivement de taille int(sys.argv[1])+1 et int(sys.argv[2])+1) ici, et séparées par 2 cases")
             self.ajouter_ligne("ruban = init_ruban(int(sys.argv[1])+1, int(sys.argv[2])+1)")
-            self.ajouter_ligne("X = [new_len(ruban) // 2]")
+            self.ajouter_ligne("X = [len_v2(ruban) // 2]")
 
     def traduire_lignes(self, lignes) :
         """
@@ -148,13 +150,13 @@ class MTdV_Traducteur_q3 :
         Gère les commandes de base (G,D,0,1), l'affichage (I),les pauses (P), et les structures de contrôle (boucle, si).
         Des blocs d'instrcutions try et except sont ajoutés pour gérer les erreurs possibles de dépassement au niveau de l'indice de la liste que représente le ruban
         """
-        self.ajouter_ligne("try :")
-        self.indentation_courante = 1
+        self.ajouter_ligne("\n")
+        #self.ajouter_ligne("try :")
+        #self.indentation_courante = 1
         for ligne in lignes :
             # On ne prend pas en compte les commentaires inline
-            index = ligne.find("%")
-            ligne = ligne[:index].strip() if index != -1 else ligne.strip()
-            
+            indice = ligne.find("%")
+            ligne = ligne[:indice].strip() if indice != -1 else ligne.strip()
             # Ajout d'espaces avant parenthèses et accolades ouvrantes et fermantes
             ligne = ligne.replace("(", " (")            
             ligne = ligne.replace("}", " }")
@@ -183,12 +185,13 @@ class MTdV_Traducteur_q3 :
                 elif tokens[i] == "P" :
                     # Met le programme en pause et affiche l'état courant du ruban
                     self.ajouter_ligne("# Extraction de la fenêtre visible du ruban")
-                    self.ajouter_ligne("print(new_join(ruban[600-50:600+50]))")
+                    self.ajouter_ligne("print(join_v2(ruban[600-50:600+50]))")
                     self.ajouter_ligne("# Création de la ligne de marqueur de position")
-                    self.ajouter_ligne("print(new_join([' ']*(X[-1]-600+50) + ['X'] + [' ']*(200-(X[-1]-600+50)-1)))")
+                    self.ajouter_ligne("print(join_v2([' ']*(X[-1]-600+50) + ['X'] + [' ']*(200-(X[-1]-600+50)-1)))")
                     self.ajouter_ligne("")
                     self.ajouter_ligne("input('Appuyez sur la touche Entrée pour continuer')")
                     #self.ajouter_ligne("sys.exit()")
+                    self.ajouter_ligne("")
 
                 elif tokens[i] == "I" :
                     # Commande d'affichage du ruban
@@ -196,9 +199,9 @@ class MTdV_Traducteur_q3 :
                     # (la position courante étant au centre de la fenêtre)
                     self.ajouter_ligne("")
                     self.ajouter_ligne("# Extraction de la fenêtre visible du ruban")
-                    self.ajouter_ligne("print(new_join(ruban[600-50:600+50]))")
+                    self.ajouter_ligne("print(join_v2(ruban[600-50:600+50]))")
                     self.ajouter_ligne("# Création de la ligne de marqueur de position")
-                    self.ajouter_ligne("print(new_join([' ']*(X[-1]-600+50) + ['X'] + [' ']*(200-(X[-1]-600+50)-1)))")
+                    self.ajouter_ligne("print(join_v2([' ']*(X[-1]-600+50) + ['X'] + [' ']*(200-(X[-1]-600+50)-1)))")
                     self.ajouter_ligne("")
 
                 elif tokens[i] == "boucle" :
@@ -242,19 +245,21 @@ class MTdV_Traducteur_q3 :
                         self.ajouter_ligne("boucle{}(ruban, X)".format(self.boucle_nom_pos_ind[-1][0]))
                         self.else_compteur -= 1
                         self.indentation_courante -= 1
+                        self.ajouter_ligne("")
                         
                         self.indentation_courante = self.boucle_nom_pos_ind[-1][-1]
                         self.ajouter_ligne("boucle{}(ruban, X)".format(self.boucle_nom_pos_ind[-1][0]))
                         self.boucle_nom_pos_ind.pop()
                         self.boucle_position_courante -= 1
+                        self.ajouter_ligne("")
                         
                 i += 1
                 
-        self.indentation_courante = 0
-        self.ajouter_ligne("except IndexError :")
-        self.indentation_courante = 1
-        self.ajouter_ligne("print('Longueur maximale du ruban atteint à la fin : le programme arrête')")
-        self.ajouter_ligne("sys.exit(1)")
+        #self.indentation_courante = 0
+        #self.ajouter_ligne("except IndexError :")
+        #self.indentation_courante = 1
+        #self.ajouter_ligne("print('Longueur maximale du ruban atteint à la fin : le programme arrête')")
+        #self.ajouter_ligne("sys.exit(1)")
  
     def traduire_fichier(self, nom_fichier) :
         """
